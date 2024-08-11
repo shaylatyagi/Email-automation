@@ -1,109 +1,98 @@
-import smtplib  # Library for sending emails
-from email.mime.multipart import MIMEMultipart  # Handles multipart email content
-from email.mime.text import MIMEText  # Handles plain text and HTML content in emails
-from email.mime.image import MIMEImage  # Handles image attachments
-from email.mime.base import MIMEBase  # Handles other file attachments
-from email import encoders  # Encodes attachments for sending
-import os  # For file path and existence checks
-import getpass  # For securely entering passwords
-import time  # For adding delays between sending emails
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.mime.base import MIMEBase
+from email import encoders
+import os
+import getpass
+import time
 # 1. Get user email credentials
-email_user = input("Enter your email address: ")  # Prompt user for email address
-email_password = getpass.getpass("Enter your password: ")  # Securely prompt user for password
+email_user = input("Enter your email address: ")
+email_password = getpass.getpass("Enter your password: ")
 # 2. SMTP server configuration (Gmail example)
-smtp_server = 'smtp.gmail.com'  # Gmail SMTP server
-smtp_port = 587  # Port for TLS
-
+smtp_server = 'smtp.gmail.com'
+smtp_port = 587
 # 3. Path to the E-Cell logo image (ensure it's uploaded in the correct path)
-image_path = "/content/ecelllogo.jpg"  # Path to the image you want to include in the email
-
+image_path = "/content/ecelllogo.jpg"
 # 4. Default email subject
-default_subject = 'Sponsorship Opportunity with E-Cell VIT'  # Default subject line
-
+default_subject = 'Sponsorship Opportunity with E-Cell VIT'
 # 5. Get the number of companies to email
-num_companies = int(input("Enter the number of companies you want to email: "))  # Ask user how many companies
-
+num_companies = int(input("Enter the number of companies you want to email: "))
 # 6. Loop through the number of companies and send an email to each
 for i in range(num_companies):
     print(f"\n--- Company {i + 1} ---")
-    company_name = input("Enter the name of the company: ")  # Ask for the company's name
-    company_email = input(f"Enter the email address of {company_name}: ")  # Ask for the company's email
-
+    company_name = input("Enter the name of the company: ")
+    company_email = input(f"Enter the email address of {company_name}: ")
     send_email = input(f"Do you want to send an email to {company_name} at {company_email}? (yes/no): ").strip().lower()
-    
-    if send_email == 'yes':  # If the user wants to send an email
+    if send_email == 'yes':
         subject = input(f"Enter subject for {company_name} (or press Enter to use default): ").strip()
-        if not subject:  # Use the default subject if none provided
+        if not subject:
             subject = default_subject
-        
         # Get the attachment path (optional)
         attachment_path = input(f"Enter the full path of the attachment file for {company_name} (or press Enter to skip): ").strip()
-        
         # 7. Create the email structure
-        msg = MIMEMultipart('related')  # 'related' allows embedding images in HTML
-        msg['From'] = email_user  # Set the sender's email
-        msg['To'] = company_email  # Set the recipient's email
-        msg['Subject'] = subject  # Set the subject line
-
+        msg = MIMEMultipart('related')
+        msg['From'] = email_user
+        msg['To'] = company_email
+        msg['Subject'] = subject
         # 8. Create the HTML email content with the embedded image and signature
         body = f"""
         <html>
-        <body>
+        <body style="font-family:Arial, sans-serif; color:#000000;">
             <p>Dear {company_name},</p>
             <p>We are reaching out to explore potential sponsorship opportunities with E-Cell VIT.</p>
             <p>[Your email content here]</p>
-            <p>Best Regards,<br>
-            <img src="cid:image1" style="width:100px;height:auto;"><br>
-            Tejasvitaa Singh,<br>
-            Senior Executive,<br>
-            E-Cell, VIT Vellore<br>
-            Ph:+91 9674573637</p>
+            <p>Best Regards,</p>
+            <p style="font-family:Arial, sans-serif; color:#666666; margin: 0;">
+                <img src="cid:image1" style="width:100px;height:auto;"><br>
+                Tejasvitaa Singh<br>
+                Senior Executive<br>
+                E-Cell, VIT Vellore<br>
+                Ph:+91 9674573637
+            </p>
         </body>
         </html>
         """
-        msg.attach(MIMEText(body, 'html'))  # Attach the HTML content to the email
-
+        msg.attach(MIMEText(body, 'html'))
         # 9. Attach the image
-        if os.path.exists(image_path):  # Check if the image exists
-            with open(image_path, 'rb') as img_file:  # Open the image in binary mode
-                img = MIMEImage(img_file.read())  # Read and prepare the image for attachment
-                img.add_header('Content-ID', '<image1>')  # Set the content ID for HTML reference
-                img.add_header('Content-Disposition', 'inline', filename='ecelllogo.jpg')  # Set the disposition
-                msg.attach(img)  # Attach the image to the email
+        if os.path.exists(image_path):
+            with open(image_path, 'rb') as img_file:
+                img = MIMEImage(img_file.read())
+                img.add_header('Content-ID', '<image1>')
+                img.add_header('Content-Disposition', 'inline', filename='ecelllogo.jpg')
+                msg.attach(img)
         else:
             print(f"Image file not found at {image_path}. Email will be sent without the image.")
-
         # 10. Attach an additional file if specified
-        if attachment_path and os.path.exists(attachment_path):  # Check if a file path was provided and exists
-            with open(attachment_path, "rb") as attachment:  # Open the file in binary mode
-                part = MIMEBase('application', 'octet-stream')  # Create a base for the file attachment
-                part.set_payload(attachment.read())  # Read and prepare the file for attachment
-                encoders.encode_base64(part)  # Encode the file for email sending
-                part.add_header('Content-Disposition', f"attachment; filename= {os.path.basename(attachment_path)}")  # Set filename
-                msg.attach(part)  # Attach the file to the email
+        if attachment_path and os.path.exists(attachment_path):
+            with open(attachment_path, "rb") as attachment:
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload(attachment.read())
+                encoders.encode_base64(part)
+                part.add_header('Content-Disposition', f"attachment; filename= {os.path.basename(attachment_path)}")
+                msg.attach(part)
         elif attachment_path:
             print(f"Attachment file not found at {attachment_path}. Email will be sent without the attachment.")
-
         # 11. Send the email
         try:
-            server = smtplib.SMTP(smtp_server, smtp_port)  # Connect to the SMTP server
-            server.starttls()  # Start TLS encryption
-            server.login(email_user, email_password)  # Log in with the user's credentials
-            server.sendmail(email_user, company_email, msg.as_string())  # Send the email
-            server.quit()  # Close the connection to the server
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.starttls()
+            server.login(email_user, email_password)
+            server.sendmail(email_user, company_email, msg.as_string())
+            server.quit()
             print(f"Email sent to {company_email} successfully.")
         except Exception as e:
             print(f"Failed to send email to {company_email}. Error: {str(e)}")
-
-        # 12. Wait before sending the next email
-        time.sleep(1)  # Wait 30 seconds to avoid being marked as spam
-
+        # 12. Wait before sending the next email, if multiple emails are to be sent
+        if num_companies > 1 and i < num_companies - 1:
+            time.sleep(1)
     else:
         print(f"Skipping email to {company_name}.")
-
-    # 13. Option to exit the loop early
-    continue_sending = input("Do you want to continue sending emails? (yes/no): ").strip().lower()
-    if continue_sending != 'yes':
-        print("Exiting the email process.")
-        break
-print("All emails processed or process was exited.")  # Indicate that all emails have been processed
+    # 13. Option to exit the loop early if sending to multiple companies and not the last one
+    if num_companies > 1 and i < num_companies - 1:
+        continue_sending = input("Do you want to continue sending emails? (yes/no): ").strip().lower()
+        if continue_sending != 'yes':
+            print("Exiting the email process.")
+            break
+print("All emails processed or process was exited.")

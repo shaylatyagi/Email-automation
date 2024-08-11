@@ -13,30 +13,39 @@ email_password = getpass.getpass("Enter your password: ")  # Securely prompt use
 # 2. SMTP server configuration (Gmail example)
 smtp_server = 'smtp.gmail.com'  # Gmail SMTP server
 smtp_port = 587  # Port for TLS
+
 # 3. Path to the E-Cell logo image (ensure it's uploaded in the correct path)
 image_path = "/content/ecelllogo.jpg"  # Path to the image you want to include in the email
+
 # 4. Default email subject
 default_subject = 'Sponsorship Opportunity with E-Cell VIT'  # Default subject line
+
 # 5. Get the number of companies to email
 num_companies = int(input("Enter the number of companies you want to email: "))  # Ask user how many companies
+
 # 6. Loop through the number of companies and send an email to each
 for i in range(num_companies):
     print(f"\n--- Company {i + 1} ---")
     company_name = input("Enter the name of the company: ")  # Ask for the company's name
     company_email = input(f"Enter the email address of {company_name}: ")  # Ask for the company's email
+
     send_email = input(f"Do you want to send an email to {company_name} at {company_email}? (yes/no): ").strip().lower()
+    
     if send_email == 'yes':  # If the user wants to send an email
         subject = input(f"Enter subject for {company_name} (or press Enter to use default): ").strip()
         if not subject:  # Use the default subject if none provided
-            subject = default_subject        
+            subject = default_subject
+        
         # Get the attachment path (optional)
         attachment_path = input(f"Enter the full path of the attachment file for {company_name} (or press Enter to skip): ").strip()
+        
         # 7. Create the email structure
         msg = MIMEMultipart('related')  # 'related' allows embedding images in HTML
         msg['From'] = email_user  # Set the sender's email
         msg['To'] = company_email  # Set the recipient's email
         msg['Subject'] = subject  # Set the subject line
-        # 8. Create the HTML email content with the embedded image
+
+        # 8. Create the HTML email content with the embedded image and signature
         body = f"""
         <html>
         <body>
@@ -44,13 +53,16 @@ for i in range(num_companies):
             <p>We are reaching out to explore potential sponsorship opportunities with E-Cell VIT.</p>
             <p>[Your email content here]</p>
             <p>Best Regards,<br>
-            [Your Name]<br>
-            E-Cell VIT, Vellore</p>
-            <img src="cid:image1" style="width:150px;height:auto;">  <!-- Embed and resize image -->
+            <img src="cid:image1" style="width:100px;height:auto;"><br>
+            Tejasvitaa Singh,<br>
+            Senior Executive,<br>
+            E-Cell, VIT Vellore<br>
+            Ph:+91 9674573637</p>
         </body>
         </html>
         """
         msg.attach(MIMEText(body, 'html'))  # Attach the HTML content to the email
+
         # 9. Attach the image
         if os.path.exists(image_path):  # Check if the image exists
             with open(image_path, 'rb') as img_file:  # Open the image in binary mode
@@ -60,6 +72,7 @@ for i in range(num_companies):
                 msg.attach(img)  # Attach the image to the email
         else:
             print(f"Image file not found at {image_path}. Email will be sent without the image.")
+
         # 10. Attach an additional file if specified
         if attachment_path and os.path.exists(attachment_path):  # Check if a file path was provided and exists
             with open(attachment_path, "rb") as attachment:  # Open the file in binary mode
@@ -70,6 +83,7 @@ for i in range(num_companies):
                 msg.attach(part)  # Attach the file to the email
         elif attachment_path:
             print(f"Attachment file not found at {attachment_path}. Email will be sent without the attachment.")
+
         # 11. Send the email
         try:
             server = smtplib.SMTP(smtp_server, smtp_port)  # Connect to the SMTP server
@@ -80,10 +94,13 @@ for i in range(num_companies):
             print(f"Email sent to {company_email} successfully.")
         except Exception as e:
             print(f"Failed to send email to {company_email}. Error: {str(e)}")
+
         # 12. Wait before sending the next email
         time.sleep(1)  # Wait 30 seconds to avoid being marked as spam
+
     else:
         print(f"Skipping email to {company_name}.")
+
     # 13. Option to exit the loop early
     continue_sending = input("Do you want to continue sending emails? (yes/no): ").strip().lower()
     if continue_sending != 'yes':
